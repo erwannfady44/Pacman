@@ -173,7 +173,6 @@ class Game:
         return True
 
     def moveGhost(self):
-        print()
         for ghost in self.ghosts:
             ghost.move()
 
