@@ -13,8 +13,9 @@ class Game:
         self.pacman = Pacman()
         blinky = Ghost("blinky", self.pacman, None)
 
-        self.ghosts = [blinky, Ghost("pinky", self.pacman, None), Ghost("clyde", self.pacman, None), Ghost("inky", self.pacman, blinky)]
-        #self.ghosts = [Ghost("clyde", self.pacman, None)]
+        self.ghosts = [blinky, Ghost("pinky", self.pacman, None), Ghost("clyde", self.pacman, None),
+                       Ghost("inky", self.pacman, blinky)]
+        # self.ghosts = [Ghost("clyde", self.pacman, None)]
         self.dots = []
         self.allDotsView = pygame.Surface((GameConfig.windowW, GameConfig.windowH))
         self.allDotsView.set_colorkey((0, 0, 0))
@@ -38,11 +39,13 @@ class Game:
             for ghost in self.ghosts:
                 ghost.scatterMode()
             self.stateDate = time()
+            print()
         elif self.mode == 2 and (time() - self.stateDate) > 7.0:
             self.mode = 1
             for ghost in self.ghosts:
                 ghost.chaseMode()
             self.stateDate = time()
+            print()
 
 
     def initDots(self):
@@ -76,9 +79,7 @@ class Game:
                 self.dotsView[i].blit(img, (dot.x, 0))
             else:
                 img = GameConfig.imgBigDot
-                self.dotsView[i].blit(img, (dot.x - 8,  - 8))
-
-
+                self.dotsView[i].blit(img, (dot.x - 8, - 8))
 
     def drawAllDots(self):
         i = 0
@@ -176,7 +177,7 @@ class Game:
         for ghost in self.ghosts:
             ghost.move()
 
-            if ghost.state == 3 and time() - self.date > 7.0:
+            if ghost.state == 3 and (time() - self.date) > 7:
                 ghost.state = 1
             if ghost.x - round(GameConfig.ghostW / 2) < self.pacman.x < ghost.x + round(GameConfig.ghostW / 2) \
                     and ghost.y - round(GameConfig.ghostW / 2) < self.pacman.y < ghost.y + round(GameConfig.ghostW / 2):
