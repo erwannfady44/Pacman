@@ -1,3 +1,4 @@
+from math import sqrt
 from queue import Queue
 from random import randint, choice
 
@@ -81,7 +82,6 @@ class Ghost:
                     return True
             elif direction == 1:
                 # Si on est dans le tunel qui traverse la map
-
                 if 150 < self.y < 320 and self.x > 570 and move:
                     self.x = 5
                     return True
@@ -321,67 +321,100 @@ class Ghost:
         start.visited = True
         queue = Queue()
         queue.put(start)
+        try:
+            while not queue.empty():
+                curNode = queue.get()
+                poosibleDirection = self.getPossibleMoveBFS(curNode.x, curNode.y)
 
-        while not queue.empty():
-            curNode = queue.get()
-            poosibleDirection = self.getPossibleMoveBFS(curNode.x, curNode.y)
+                neighbors = []
+                for direction in poosibleDirection:
+                    x = curNode.x
+                    y = curNode.y
+                    if direction == 0:
+                        y -= 21
+                    elif direction == 1:
+                        if x >= 560:
+                            x = 35
+                        else:
+                            x += 21
+                    elif direction == 2:
+                        y += 21
+                    elif direction == 3:
+                        if x <= 35:
+                            x = 560
+                        else:
+                            x -= 21
+                    neighbors.append(self.nodes[round((y - 35) / 21)][round((x - 35) / 21)])
 
-            neighbors = []
-            for direction in poosibleDirection:
-                x = curNode.x
-                y = curNode.y
-                if direction == 0:
-                    y -= 21
-                elif direction == 1:
-                    if x >= 560:
-                        x = 35
-                    else:
-                        x += 21
-                elif direction == 2:
-                    y += 21
-                elif direction == 3:
-                    if x <= 35:
-                        x = 560
-                    else:
-                        x -= 21
-                neighbors.append(self.nodes[round((y - 35) / 21)][round((x - 35) / 21)])
-
-            if curNode == target:
-                while curNode.parent.parent is not None and not (
-                        curNode.parent.x == startX and curNode.parent.y == startY) and not (
-                        curNode.x == curNode.parent.parent.x and curNode.y == curNode.parent.parent.y):
-                    curNode = curNode.parent
-                # curNode = curNode.parent
-                ghostDirection = 0
-                if curNode.y < startY:
+                if curNode == target:
+                    while curNode.parent.parent is not None and not (
+                            curNode.parent.x == startX and curNode.parent.y == startY) and not (
+                            curNode.x == curNode.parent.parent.x and curNode.y == curNode.parent.parent.y):
+                        curNode = curNode.parent
+                    # curNode = curNode.parent
                     ghostDirection = 0
-                elif curNode.x > startX:
-                    ghostDirection = 1
-                elif curNode.y > startY:
-                    ghostDirection = 2
-                elif curNode.x < startX:
-                    ghostDirection = 3
-                self.resetVisitedNode()
-                if ghostDirection % 2 == self.direction % 2 and self.direction != ghostDirection:
-                    return self.randomDirection()
-                    #return ghostDirection
+                    if curNode.y < startY:
+                        ghostDirection = 0
+                    elif curNode.x > startX:
+                        ghostDirection = 1
+                    elif curNode.y > startY:
+                        ghostDirection = 2
+                    elif curNode.x < startX:
+                        ghostDirection = 3
+                    self.resetNode()
+                    if ghostDirection % 2 == self.direction % 2 and self.direction != ghostDirection:
+                        return self.shorterDistanceWithPythagore(start, target)
+                    else:
+                        return ghostDirection
                 else:
-                    return ghostDirection
-            else:
-                for neighbor in neighbors:
-                    if not neighbor.visited:
-                        neighbor.visited = True
-                        neighbor.parent = curNode
-                        queue.put(neighbor)
-        self.resetVisitedNode()
+                    for neighbor in neighbors:
+                        if not neighbor.visited:
+                            neighbor.visited = True
+                            neighbor.parent = curNode
+                            queue.put(neighbor)
+        except Exception:
+            return self.shorterDistanceWithPythagore(start, target)
+        self.resetNode()
 
-        self.targetX, self.targetY = getScatterTarget(self.name)
+    def shorterDistanceWithPythagore(self, start, target):
+        if not (150 < start.y < 320 and start.x > 570):
+            distance = []
+            for direction in self.getPossibleMoveBFS(start.x, start.y):
+                if not (direction % 2 == self.direction % 2 and direction != self.direction):
+                    positionX = 0
+                    positionY = 0
+                    if direction == 0:
+                        positionY -= 21
+                    elif direction == 1:
+                        if positionX >= 560:
+                            positionX = 35
+                        else:
+                            positionX += 21
+                    elif direction == 2:
+                        positionY += 21
+                    elif direction == 3:
+                        if positionX <= 35:
+                            positionX = 560
+                        else:
+                            positionX -= 21
+                    distance.append(
+                        (sqrt((positionX - target.x) ** 2 + (positionY - target.y) ** 2), direction))
 
-    def resetVisitedNode(self):
+            dmin = distance[0]
+            i = 0
+            for d in distance:
+                if d[0] < dmin[0]:
+                    dmin = d
+            return dmin[1]
+        else:
+            return self.randomDirection()
+
+    def resetNode(self):
         for nodes in self.nodes:
             for node in nodes:
                 if node is not None:
                     node.visited = False
+                    node.parent = None
 
     def initNodes(self):
         y = 35
@@ -417,14 +450,12 @@ class Ghost:
             self.nextState = 2
         else:
             self.state = 2
-        self.turnArround()
 
     def chaseMode(self):
         if self.state == 0:
-            self.nextState = 2
+            self.nextState = 1
         else:
-            self.state = 2
-        self.turnArround()
+            self.state = 1
 
     def turnArround(self):
         self.direction = (self.direction + 2) % 4

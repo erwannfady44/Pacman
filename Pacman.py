@@ -21,7 +21,6 @@ class Pacman:
             elif self.direction == 3:
                 self.x += 1
 
-
     def possibleMove(self, direction):
         if direction == 0:
             if GameConfig.imgMove.get_at((self.x, self.y - 1)) == (255, 255, 255, 255):

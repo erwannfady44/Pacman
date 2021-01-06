@@ -15,7 +15,6 @@ class Game:
 
         self.ghosts = [blinky, Ghost("pinky", self.pacman, None), Ghost("clyde", self.pacman, None),
                        Ghost("inky", self.pacman, blinky)]
-        # self.ghosts = [Ghost("clyde", self.pacman, None)]
         self.dots = []
         self.allDotsView = pygame.Surface((GameConfig.windowW, GameConfig.windowH))
         self.allDotsView.set_colorkey((0, 0, 0))
@@ -34,19 +33,25 @@ class Game:
         self.checkEatDot()
         self.moveGhost()
 
-        if self.mode == 1 and (time() - self.stateDate) > 20.0:
+        if self.mode == 1 and (time() - self.stateDate) > 60.0:
+            print("scatterMode")
             self.mode = 2
             for ghost in self.ghosts:
-                ghost.scatterMode()
+                if ghost.state != 3:
+                    ghost.scatterMode()
             self.stateDate = time()
-            print()
-        elif self.mode == 2 and (time() - self.stateDate) > 7.0:
+        elif self.mode == 2 and (time() - self.stateDate) > 10.0:
+            print("chasseMode")
             self.mode = 1
             for ghost in self.ghosts:
-                ghost.chaseMode()
+                if ghost.state != 3:
+                    ghost.chaseMode()
             self.stateDate = time()
-            print()
 
+        else:
+            for ghost in self.ghosts:
+                if ghost.state == 3 and (time() - self.date) > 15:
+                    ghost.state = 1
 
     def initDots(self):
         y = 35
@@ -137,35 +142,29 @@ class Game:
         displayRect = img.get_rect()
         displayRect.center = (GameConfig.mapStartW + 50, GameConfig.mapStartH - 25)
         window.blit(img, displayRect)
-        window.blit(pygame.image.load('resources/bigDot.png'),
-                    (GameConfig.mapStartW + 50 + i * (GameConfig.pacManW + 10),
-                     GameConfig.mapStartH + GameConfig.mapSizeH + 20))
 
     def checkEatDot(self):
-        if (self.pacman.x - 35) % 21 == 0 and (self.pacman.y - 35) % 21 == 0:
-            for dots in self.dots:
-                if dots and not self.pacman.y - 15 < dots[0].y < self.pacman.y + 15:
-                    pass
-                for dot in dots:
-                    if self.pacman.x - 15 < dot.x < self.pacman.x + 15 and self.pacman.y - 15 < dot.y < self.pacman.y + 15:
-                        dots.remove(dot)
-                        self.drawDots(round((dot.y - 35) / 21))
-                        self.drawAllDots()
-                        if dot.value == 1:
-                            self.initDate()
-                            for ghost in self.ghosts:
-                                ghost.scraredMode()
-                        else:
-                            self.score += 10
-                        if self.checkNextLevel():
-                            self.pacman.initialPosition()
-                            self.pacman.setDirection("up")
-                            for ghost in self.ghosts:
-                                ghost.setup()
-                            self.level += 1
+        for dots in self.dots:
+            for dot in dots:
+                if self.pacman.x - 15 < dot.x < self.pacman.x + 15 and self.pacman.y - 15 < dot.y < self.pacman.y + 15:
+                    dots.remove(dot)
+                    self.drawDots(round((dot.y - 35) / 21))
+                    self.drawAllDots()
+                    if dot.value == 1:
+                        self.initDate()
+                        for ghost in self.ghosts:
+                            ghost.scraredMode()
+                    else:
+                        self.score += 10
+                    if self.checkNextLevel():
+                        self.pacman.initialPosition()
+                        self.pacman.setDirection("up")
+                        for ghost in self.ghosts:
+                            ghost.setup()
+                        self.level += 1
 
-                            self.initDots()
-                        break
+                        self.initDots()
+                    break
 
     def checkNextLevel(self):
         for dots in self.dots:
@@ -176,9 +175,6 @@ class Game:
     def moveGhost(self):
         for ghost in self.ghosts:
             ghost.move()
-
-            if ghost.state == 3 and (time() - self.date) > 7:
-                ghost.state = 1
             if ghost.x - round(GameConfig.ghostW / 2) < self.pacman.x < ghost.x + round(GameConfig.ghostW / 2) \
                     and ghost.y - round(GameConfig.ghostW / 2) < self.pacman.y < ghost.y + round(GameConfig.ghostW / 2):
                 if ghost.state != 3:
