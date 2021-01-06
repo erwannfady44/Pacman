@@ -5,6 +5,8 @@ class GameConfig:
     windowW = 800
     windowH = 800
     white = (255, 255, 255)
+    yellow = (255, 251.4, 0)
+    red = (255, 0, 0)
     background = (0, 0, 0)
     wall = (32, 32, 255)
     pacManW = 30
@@ -27,7 +29,7 @@ class GameConfig:
     mapStartH = 68
     ghostW = 30
     ghostH = 30
-    font = 'ressources/arcadeClassic.ttf'
+    #font = pygame.font.Font('resources/arcadeClassic.ttf', 20)
     fps = 60
 
 

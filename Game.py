@@ -15,6 +15,7 @@ class Game:
 
         self.ghosts = [blinky, Ghost("pinky", self.pacman, None), Ghost("clyde", self.pacman, None),
                        Ghost("inky", self.pacman, blinky)]
+
         self.dots = []
         self.allDotsView = pygame.Surface((GameConfig.windowW, GameConfig.windowH))
         self.allDotsView.set_colorkey((0, 0, 0))
@@ -27,6 +28,8 @@ class Game:
         self.date = time()
         self.stateDate = time()
         self.mode = 2
+        self.win = False
+        self.loose = False
 
     def nextState(self):
         self.pacman.move()
@@ -93,6 +96,33 @@ class Game:
             self.allDotsView.blit(dotView, (GameConfig.mapStartW, GameConfig.mapStartH + 35 + i * 21))
             i += 1
 
+    def drawStart(self, window):
+        self.win = False
+        self.draw(window)
+        font = pygame.font.Font('resources/arcadeClassic.ttf', 40)
+        img = font.render("READY!", True, GameConfig.yellow)
+        displayRect = img.get_rect()
+        displayRect.center = (405, 440)
+        window.blit(img, displayRect)
+
+    def drawGameOver(self, window):
+        window.fill(GameConfig.background)
+        window.blit(GameConfig.imgMap, (GameConfig.mapStartW, GameConfig.mapStartH))
+        window.blit(self.allDotsView, (0, 0))
+
+        font = pygame.font.Font('resources/arcadeClassic.ttf', 20)
+        img = font.render(str(self.score), True, GameConfig.white)
+        displayRect = img.get_rect()
+        displayRect.center = (GameConfig.mapStartW + 50, GameConfig.mapStartH - 25)
+        window.blit(img, displayRect)
+
+        self.draw(window)
+        font = pygame.font.Font('resources/arcadeClassic.ttf', 35)
+        img = font.render("GAME        OVER", True, GameConfig.red)
+        displayRect = img.get_rect()
+        displayRect.center = (400, 440)
+        window.blit(img, displayRect)
+
     def draw(self, window):
         window.fill(GameConfig.background)
         window.blit(GameConfig.imgMap, (GameConfig.mapStartW, GameConfig.mapStartH))
@@ -115,7 +145,7 @@ class Game:
             currentPacManImage = GameConfig.imgPacMan_state_3
         elif self.pacman.possibleMove(self.pacman.direction) and millis % every >= every - 5 * duree / 5:
             currentPacManImage = GameConfig.imgPacMan_state_2
-        window.blit(pygame.transform.rotate(currentPacManImage, self.pacman.direction * 90),
+        window.blit(pygame.transform.rotate(currentPacManImage, int(self.pacman.direction * 90)),
                     (GameConfig.mapStartW + self.pacman.x - round(GameConfig.pacManW / 2),
                      GameConfig.mapStartH + self.pacman.y - round(GameConfig.pacManH / 2)))
 
@@ -158,12 +188,13 @@ class Game:
                         self.score += 10
                     if self.checkNextLevel():
                         self.pacman.initialPosition()
-                        self.pacman.setDirection("up")
+                        self.pacman.setDirection(0)
                         for ghost in self.ghosts:
                             ghost.setup()
                         self.level += 1
 
                         self.initDots()
+                        self.win = True
                     break
 
     def checkNextLevel(self):
@@ -177,9 +208,13 @@ class Game:
             ghost.move()
             if ghost.x - round(GameConfig.ghostW / 2) < self.pacman.x < ghost.x + round(GameConfig.ghostW / 2) \
                     and ghost.y - round(GameConfig.ghostW / 2) < self.pacman.y < ghost.y + round(GameConfig.ghostW / 2):
-                if ghost.state != 3:
+                if ghost.state != 3 and ghost.state != 0:
                     self.life -= 1
                     self.pacman.initialPosition()
+                    self.mode = 2
+                    self.initDate()
+                    self.loose = True
+                    self.pacman.direction = 3
                     for ghost in self.ghosts:
                         ghost.setup()
                     if self.life < 0:

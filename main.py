@@ -6,8 +6,16 @@ from Game import *
 def gameLoop(window, clock):
     newDirection = ""
     game = Game()
+    game.drawStart(window)
+    pygame.display.update()
+    sleep(1)
     changeDirection = False
     while not game.gameOver:
+        if game.win or game.loose:
+            game.loose = False
+            game.drawStart(window)
+            pygame.display.update()
+            sleep(2)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
@@ -33,7 +41,9 @@ def gameLoop(window, clock):
         game.draw(window)
         pygame.display.update()
         clock.tick(GameConfig.fps)
-
+    game.drawGameOver(window)
+    pygame.display.update()
+    sleep(3)
 
 if __name__ == '__main__':
     pygame.init()
